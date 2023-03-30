@@ -1,0 +1,851 @@
+button_card_templates:
+  !include_dir_merge_named button_card_templates
+
+views:
+  - type: custom:grid-layout
+    title: Home
+    layout:
+      #default
+      margin: 0
+      grid-gap: var(--custom-layout-card-padding)
+      grid-template-columns: repeat(4, 1fr) 0
+      grid-template-rows: 0 repeat(2, fit-content(100%)) 0fr
+      grid-template-areas: |
+        "sidebar  .           .       .       ."
+        "sidebar  vardagsrum  studio  sovrum  ."
+        "sidebar  media       övrigt  hemma   ."
+        "sidebar  footer      footer  footer  ."
+      mediaquery:
+        #phone
+        "(max-width: 800px)":
+          grid-gap: calc(var(--custom-layout-card-padding) * 1.7)
+          grid-template-columns: 0 repeat(2, 1fr) 0
+          grid-template-rows: 0 repeat(5, fit-content(100%)) 0fr
+          grid-template-areas: |
+            ".  .           .        ."
+            ".  sidebar     sidebar  ."
+            ".  vardagsrum  sovrum   ."
+            ".  studio      övrigt   ."
+            ".  media       hemma    ."
+            ".  footer      footer   ."
+            ".  .           .        ."
+        #portrait
+        "(max-width: 1200px)":
+          grid-gap: var(--custom-layout-card-padding)
+          grid-template-columns: repeat(3, 1fr) 0
+          grid-template-rows: 0 repeat(3, fit-content(100%)) 0fr
+          grid-template-areas: |
+            "sidebar  .           .       ."
+            "sidebar  vardagsrum  sovrum  ."
+            "sidebar  studio      övrigt  ."
+            "sidebar  media       hemma   ."
+            "sidebar  footer      footer  ."
+            "sidebar  .           .       ."
+    cards:
+
+      #extra_styles fix, do not remove
+      #also warn if theme is not set
+
+      - type: custom:button-card
+        view_layout:
+          grid-area: 1 / 2 / 2 / 5
+        name: SET THEME TO "tablet" IN PROFILE
+        tap_action:
+          action: navigate
+          navigation_path: /profile
+        styles:
+          card:
+            - display: >
+                [[[
+                  return hass.themes.theme === 'tablet'
+                      ? 'none'
+                      : 'initial';
+                ]]]
+          name:
+            - z-index: 1
+            - overflow: visible
+            - color: red
+            - font-weight: bolder
+            - font-size: xxx-large
+            - background: yellow
+
+      #################################################
+      #                                               #
+      #                    SIDEBAR                    #
+      #                                               #
+      #################################################
+
+      - type: vertical-stack
+        view_layout:
+          grid-area: sidebar
+        cards:
+
+          - type: custom:button-card
+            entity: sensor.template_sidebar
+            template: sidebar
+
+          - type: conditional
+            conditions:
+              - entity: input_boolean.laundry_display
+                state: 'on'
+            card:
+              type: custom:button-card
+              entity: timer.laundry
+              double_tap_action:
+                action: call-service
+                service: input_boolean.turn_off
+                service_data:
+                  entity_id: input_boolean.laundry_display
+              template: laundry
+
+
+
+          #################################################
+          #                                               #
+          #                   WEATHER                     #
+          #                                               #
+          #################################################
+          
+          - entity: weather.forecast_wo_de_jia
+            theme: Caule Black Rose Glass
+            style:
+              border-radius: 5%
+              height: 15%
+              left: 11.1%
+              top: 58%
+              width: 18%
+            type: weather-forecast
+ 
+          #################################################
+          #                                               #
+          #                   WEATHER                     #
+          #                                               #
+          #################################################
+          
+          - type: custom:auto-entities
+            card:
+              type: entities
+              show_header_toggle: false
+              state_color: true
+              title: 媒体服务器活跃用户
+            filter:
+              include:
+                - entity_id: media_player*
+                  options:
+                    type: custom:mini-media-player
+                    shortcuts:
+                      attribute: app_name
+                    hide:
+                      controls: true
+                      volume: true
+                      power: true
+                  state: playing
+                - entity_id: media_player*
+                  state: paused
+              exclude: []
+            sort:
+              method: none
+              
+
+                          
+      #################################################
+      #                                               #
+      #                  VARDAGSRUM                   #
+      #                                               #
+      #################################################
+      
+      - type: grid
+        title: 涂鸦插排
+        view_layout:
+          grid-area: vardagsrum
+        columns: 1
+        cards:
+
+          - type: custom:swipe-card
+            start_card: 1
+            parameters:
+              roundLengths: true
+              effect: coverflow
+              speed: 550
+              spaceBetween: 40
+              threshold: 7
+            cards:
+
+              - type: grid
+                columns: 2
+                cards:
+
+                  - type: custom:button-card
+                    entity: switch.shou_ji_chong_dian_qi_xiang_guan_socket_1
+                    name: iMac音响
+                    template:
+                      - base
+                      - icon_monitors
+                      - loader
+                      
+                  - type: custom:button-card
+                    entity: switch.shou_ji_chong_dian_qi_xiang_guan_socket_2
+                    name: iphone
+                    template:
+                      - base
+                      - icon_apple
+                      - loader
+
+
+                  - type: custom:button-card
+                    entity: switch.shou_ji_chong_dian_qi_xiang_guan_socket_3
+                    name: APC BK650
+                    template:
+                      - base
+                      - icon_ups
+                      - loader
+
+                  - type: custom:button-card
+                    entity: sensor.shou_ji_chong_dian_qi_xiang_guan_power
+                    name: 当前功耗
+                    hold_action:
+                      action: none
+                    custom_fields:
+                      graph:
+                        card:
+                          entities:
+                            - entity: sensor.shou_ji_chong_dian_qi_xiang_guan_power
+                            - entity: sensor.shou_ji_chong_dian_qi_xiang_guan_power
+                              color: gray
+                              y_axis: secondary
+                              show_line: false
+                              show_points: false
+                              show_legend: false
+                              show_labels: false
+                    template:
+                      - temperature2
+                      - icon_shandian4
+
+              - type: grid
+                columns: 2
+                cards:
+
+                  - type: custom:button-card
+                    entity: switch.shou_ji_chong_dian_qi_xiang_guan_socket_4
+                    name: PC音响
+                    template:
+                      - base
+                      - icon_monitors
+                      - loader
+                      
+                  - type: custom:button-card
+                    entity: switch.shou_ji_chong_dian_qi_xiang_guan_socket_5
+                    name: 三星s9
+                    template:
+                      - base
+                      - icon_iphone
+                      - loader
+
+                  - type: custom:button-card
+                    entity: switch.shou_ji_chong_dian_qi_xiang_guan_usb_1
+                    name: USB供电
+                    template:
+                      - base
+                      - icon_usb
+                      - loader
+                      
+                  - type: custom:button-card
+                    entity: sensor.shou_ji_chong_dian_qi_xiang_guan_voltage
+                    name: 当前电压
+                    hold_action:
+                      action: none
+                    custom_fields:
+                      graph:
+                        card:
+                          entities:
+                            - entity: sensor.shou_ji_chong_dian_qi_xiang_guan_voltage
+                            - entity: sensor.shou_ji_chong_dian_qi_xiang_guan_voltage
+                              color: gray
+                              y_axis: secondary
+                              show_line: false
+                              show_points: false
+                              show_legend: false
+                              show_labels: false
+                    template:
+                      - temperature4
+                      - icon_dianya3
+
+              - type: grid
+                columns: 2
+                cards:
+              
+                  - type: custom:button-card
+                    entity: sensor.shou_ji_chong_dian_qi_xiang_guan_current
+                    name: 当前电流
+                    template:
+                      - base
+                      - icon_dianliu2
+
+
+      #################################################
+      #                                               #
+      #                    STUDIO                     #
+      #                                               #
+      #################################################
+
+      - type: grid
+        title: 小米插排
+        view_layout:
+          grid-area: studio
+        columns: 1
+        cards:
+
+          - type: custom:swipe-card
+            start_card: 1
+            parameters:
+              roundLengths: true
+              effect: coverflow
+              speed: 550
+              spaceBetween: 40
+              threshold: 7
+            cards:
+
+              - type: grid
+                columns: 2
+                cards:
+
+                  - type: custom:button-card
+                    entity: switch.sp5_cloud_176292_switch_2
+                    name: iMac
+                    template:
+                      - base
+                      - icon_imac
+                      - loader
+                      
+                  - type: custom:button-card
+                    entity: switch.sp5_cloud_176292_switch_3
+                    name: 4K显示器
+                    template:
+                      - base
+                      - icon_tv
+                      - loader
+
+                  - type: custom:button-card
+                    entity: switch.sp5_cloud_176292_switch_4
+                    name: PC主机
+                    template:
+                      - base
+                      - icon_pc
+                      - loader
+
+                  - type: custom:button-card
+                    entity: switch.sp5_cloud_176292_switch_usb
+                    name: USB供电
+                    template:
+                      - base
+                      - icon_usb
+
+              - type: grid
+                columns: 2
+                cards:
+
+                  - type: custom:button-card
+                    entity: switch.sp5_cloud_176292_switch_5
+                    name: 插座
+                    template:
+                      - base
+                      - icon_socket
+                      - loader
+                      
+                      
+      #################################################
+      #                                               #
+      #                    SOVRUM                     #
+      #                                               #
+      #################################################
+
+      - type: grid
+        title: 涂鸦插排
+        view_layout:
+          grid-area: sovrum
+        columns: 1
+        cards:
+
+          - type: custom:swipe-card
+            start_card: 1
+            parameters:
+              roundLengths: true
+              effect: coverflow
+              speed: 550
+              spaceBetween: 40
+              threshold: 7
+            cards:
+
+              - type: grid
+                columns: 2
+                cards:
+
+                  - type: custom:button-card
+                    entity: switch.wi_fizhi_neng_liu_kong_ji_liang_pai_cha_3_socket_2
+                    name: unraid
+                    template:
+                      - base
+                      - icon_unraid
+                      - loader
+                      
+                  - type: custom:button-card
+                    entity: switch.wi_fizhi_neng_liu_kong_ji_liang_pai_cha_3_socket_1
+                    name: 插座1
+                    template:
+                      - base
+                      - icon_socket
+
+
+                  - type: custom:button-card
+                    entity: switch.wi_fizhi_neng_liu_kong_ji_liang_pai_cha_3_usb_1
+                    name: 机柜风扇
+                    template:
+                      - base
+                      - icon_fan2
+                      - loader
+
+                  - type: custom:button-card
+                    entity: sensor.wi_fizhi_neng_liu_kong_ji_liang_pai_cha_3_power
+                    name: 当前功耗
+                    template:
+                      - base
+                      - icon_shandian4
+
+              - type: grid
+                columns: 2
+                cards:
+
+                  - type: custom:button-card
+                    entity: switch.wi_fizhi_neng_liu_kong_ji_liang_pai_cha_3_socket_3
+                    name: 插座3
+                    template:
+                      - base
+                      - icon_socket
+                      - loader
+                      
+                  - type: custom:button-card
+                    entity: switch.wi_fizhi_neng_liu_kong_ji_liang_pai_cha_3_socket_4
+                    name: 插座4
+                    template:
+                      - base
+                      - icon_socket
+                      - loader
+
+                  - type: custom:button-card
+                    entity: switch.wi_fizhi_neng_liu_kong_ji_liang_pai_cha_3_socket_5
+                    name: 插座5
+                    template:
+                      - base
+                      - icon_socket
+                      - loader
+                      
+                  - type: custom:button-card
+                    entity: sensor.wi_fizhi_neng_liu_kong_ji_liang_pai_cha_3_voltage
+                    name: 当前电压
+                    template:
+                      - base
+                      - icon_dianya3
+                      
+              - type: grid
+                columns: 2
+                cards:
+              
+                  - type: custom:button-card
+                    entity: sensor.wi_fizhi_neng_liu_kong_ji_liang_pai_cha_3_current
+                    name: 当前电流
+                    template:
+                      - base
+                      - icon_dianliu2
+
+
+      #################################################
+      #                                               #
+      #                     MEDIA                     #
+      #                                               #
+      #################################################
+
+      - type: grid
+        title: Media
+        view_layout:
+          grid-area: media
+        columns: 1
+        cards:
+
+          - type: custom:swipe-card
+            parameters:
+              speed: 550
+              spaceBetween: 40
+              threshold: 5
+            cards:
+
+              - type: horizontal-stack
+                cards:
+
+                  - type: conditional
+                    conditions:
+                      - entity: select.conditional_media
+                        state_not: Plex Movies (Offline)
+
+                      - entity: select.conditional_media
+                        state_not: jellyfin
+
+                      - entity: select.conditional_media
+                        state_not: emby
+
+                      - entity: select.conditional_media
+                        state_not: google
+                    card:
+                      type: custom:button-card
+                      entity: sensor.plex_recently_added
+                      name: Plex Movies
+                      tap_action:
+                        action: none
+                      template:
+                        - conditional_media
+                        - icon_plex
+                        
+
+                  - type: conditional
+                    conditions:
+                      - entity: select.conditional_media
+                        state: jellyfin
+                    card:
+                      type: custom:button-card
+                      entity: media_player.plex_plex_web_chrome_osx
+                      name: Plex Movies (Offline)
+                      template:
+                        - conditional_media
+                        - icon_jellyfin
+
+                  - type: conditional
+                    conditions:
+                      - entity: select.conditional_media
+                        state: jellyfin
+                    card:
+                      type: custom:button-card
+                      entity: media_player.chrome
+                      triggers_update: sensor.youtube_watching
+                      template:
+                        - conditional_media
+                        - icon_plex
+
+                  - type: conditional
+                    conditions:
+                      - entity: select.conditional_media
+                        state: emby
+                    card:
+                      type: custom:button-card
+                      entity: media_player.emby_chrome_macos_2
+                      template:
+                        - conditional_media
+                        - icon_emby
+
+                  - type: conditional
+                    conditions:
+                      - entity: select.conditional_media
+                        state: google
+                    card:
+                      type: custom:button-card
+                      entity: media_player.chromecast
+                      template:
+                        - conditional_media
+                        - icon_google
+
+              - type: grid
+                columns: 2
+                cards:
+
+                  - type: custom:button-card
+                    entity: media_player.plex_plex_web_chrome_osx_2
+                    triggers_update: sensor.youtube_watching
+                    name: plex
+                    template:
+                      - media
+                      - icon_plex2
+
+                  - type: custom:button-card
+                    entity: media_player.chromecast
+                    triggers_update: sensor.youtube_watching
+                    name: google
+                    template:
+                      - media
+                      - icon_google
+
+                  - type: custom:button-card
+                    entity: media_player.emby_chrome_macos_2
+                    name: emby
+                    template:
+                      - media
+                      - icon_emby
+
+                  - type: custom:button-card
+                    entity: media_player.chrome
+                    name: jellyfin
+                    template:
+                      - media
+                      - icon_jellyfin
+
+      #################################################
+      #                                               #
+      #                    ÖVRIGT                     #
+      #                                               #
+      #################################################
+
+      - type: grid
+        title: 传感器
+        view_layout:
+          grid-area: övrigt
+        columns: 2
+        cards:
+                
+          - type: custom:button-card
+            entity: sensor.192_168_50_10_5ghz_temperature
+            name: 路由5G
+            hold_action:
+              action: none
+            custom_fields:
+              graph:
+                card:
+                  entities:
+                    - entity: sensor.192_168_50_10_5ghz_temperature
+                    - entity: sensor.192_168_50_10_5ghz_temperature
+                      color: gray
+                      y_axis: secondary
+                      show_line: false
+                      show_points: false
+                      show_legend: false
+                      show_labels: false
+            template:
+              - temperature
+              - icon_temp
+              
+
+          - type: custom:button-card
+            entity: sensor.192_168_50_10_cpu_temperature
+            name: 路由CPU
+            hold_action:
+              action: none
+            custom_fields:
+              graph:
+                card:
+                  entities:
+                    - entity: sensor.192_168_50_10_cpu_temperature
+                    - entity: sensor.192_168_50_10_cpu_temperature
+                      color: gray
+                      y_axis: secondary
+                      show_line: false
+                      show_points: false
+                      show_legend: false
+                      show_labels: false
+            template:
+              - temperature
+              - icon_temp
+              
+          - type: custom:button-card
+            entity: sensor.ups_battery_charge
+            name: UPS电量
+            hold_action:
+              action: none
+            custom_fields:
+              graph:
+                card:
+                  entities:
+                    - entity: sensor.ups_battery_charge
+                    - entity: sensor.ups_battery_charge
+                      color: gray
+                      y_axis: secondary
+                      show_line: false
+                      show_points: false
+                      show_legend: false
+                      show_labels: false
+            template:
+              - temperature3
+              - icon_dianchi2
+              
+
+          - type: custom:button-card
+            entity: sensor.ups_input_voltage
+            name: UPS电压
+            hold_action:
+              action: none
+            custom_fields:
+              graph:
+                card:
+                  entities:
+                    - entity: sensor.ups_input_voltage
+                    - entity: sensor.ups_input_voltage
+                      color: gray
+                      y_axis: secondary
+                      show_line: false
+                      show_points: false
+                      show_legend: false
+                      show_labels: false
+            template:
+              - temperature4
+              - icon_dianya3
+
+
+      #################################################
+      #                                               #
+      #                     HEMMA                     #
+      #                                               #
+      #################################################
+
+      - type: grid
+        title: 监控
+        view_layout:
+          grid-area: hemma
+        columns: 2
+        cards:
+
+          - type: custom:button-card
+            entity: person.zhangsong
+            name: 我
+            triggers_update:
+              - sensor.matte_last_changed
+            double_tap_action:
+              !include popup/hemma_mattias.yaml
+            variables:
+              retain: sensor.matte_last_changed
+            template:
+              - person
+              - circle
+
+             
+
+          - type: custom:button-card
+            entity: person.lao_ba
+            name: 老爸
+            triggers_update:
+              - sensor.sanja_last_changed
+            double_tap_action:
+              !include popup/hemma_sanja.yaml
+            variables:
+              retain: sensor.sanja_last_changed
+            template:
+              - person
+              - circle
+
+
+          - type: custom:button-card
+            entity: camera.songdejk_da_men_kou
+            name: 大门口
+            template:
+              - media
+              - icon_spot
+              
+
+          - type: custom:button-card
+            entity: camera.songdejk_yuan_zi_li
+            name: 院子里
+            template:
+              - media
+              - icon_spot
+
+      #################################################
+      #                                               #
+      #                    FOOTER                     #
+      #                                               #
+      #################################################
+
+      - type: horizontal-stack
+        view_layout:
+          grid-area: footer
+        cards:
+
+          - type: custom:button-card
+            name: >
+              <ha-icon icon="mdi:nas"></ha-icon> NAS
+            tap_action:
+              !include popup/footer_nas.yaml
+            triggers_update:
+              - update.nas_dsm_update
+              - sensor.nas_volume_1_status
+              - binary_sensor.nas_security_status
+              - sensor.disk_use_percent
+            variables:
+              notify: >
+                [[[
+                  let id = this._config.triggers_update;
+                  if (id.every(e => states[e]))
+                      return states[id[0]].state === 'on'
+                          ? 1
+                          : states[id[1]].state === 'background_scrubbing' ||
+                            states[id[2]].state === 'on' ||
+                            parseFloat(states[id[3]].state) >= 85;
+                ]]]
+            template: footer
+
+          - type: custom:button-card
+            entity: sensor.template_updates
+            name: >
+              <ha-icon icon="mdi:arrow-up-bold-circle-outline"></ha-icon> Uppdatera
+            tap_action:
+              !include popup/footer_updates.yaml
+            variables:
+              notify: >
+                [[[
+                  return parseInt(entity?.state);
+                ]]]
+            template: footer
+
+          - type: custom:button-card
+            name: >
+              <ha-icon icon="mdi:robot-vacuum-variant"></ha-icon> Städa
+            tap_action:
+              !include popup/footer_vacuum.yaml
+            triggers_update:
+              - sensor.date
+            variables:
+              notify: >
+                [[[
+                  let id = states['sensor.morty_last_clean_end'];
+                  if (id) return (Date.now() - Date.parse(id.state)) > 6048e5;
+                ]]]
+            template: footer
+
+          - type: custom:button-card
+            name: >
+              <ha-icon icon="mdi:chart-line-variant"></ha-icon> Historik
+            tap_action:
+              !include popup/footer_history.yaml
+            template: footer
+
+          - type: custom:button-card
+            name: >
+              <ha-icon icon="mdi:router-wireless"></ha-icon> asus
+            tap_action:
+              !include popup/footer_tablet.yaml
+            triggers_update:
+              - update.unifi_dream_machine
+              - binary_sensor.template_udm_internet
+            variables:
+              notify: >
+                [[[
+                  let id = this._config.triggers_update;
+                  if (id.every(e => states[e]))
+                      return states[id[0]].state === 'on'
+                          ? 1
+                          : states[id[1]].state === 'off';
+                ]]]
+            template: footer
+
+          - type: custom:button-card
+            name: >
+              <ha-icon icon="mdi:router-wireless"></ha-icon> ikuai
+            tap_action:
+              !include popup/footer_router.yaml
+            triggers_update:
+              - update.unifi_dream_machine
+              - binary_sensor.template_udm_internet
+            variables:
+              notify: >
+                [[[
+                  let id = this._config.triggers_update;
+                  if (id.every(e => states[e]))
+                      return states[id[0]].state === 'on'
+                          ? 1
+                          : states[id[1]].state === 'off';
+                ]]]
+            template: footer
+

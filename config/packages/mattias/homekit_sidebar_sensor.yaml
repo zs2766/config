@@ -1,0 +1,269 @@
+
+sensor:
+
+    ####################################################
+    #                                                  #
+    #                     SENSORS                      #
+    #                                                  #
+    ####################################################
+
+  - platform: version
+    name: hass_version_installed
+
+  - platform: version
+    name: hass_version_latest
+    source: docker
+
+  - platform: version
+    name: hass_version_latest_beta
+    beta: true
+    source: docker
+
+  - platform: filesize
+    file_paths:
+      - /config/home-assistant_v2.db
+      - /config/home-assistant.log
+
+  - platform: command_line
+    name: hacs_version
+    scan_interval: 86400
+    command: grep -oP 'VERSION = "\K[^"]+' custom_components/hacs/const.py
+
+  - platform: systemmonitor
+    resources:
+      - type: disk_use_percent
+        arg: /
+      - type: memory_use_percent
+      - type: processor_use
+      - type: last_boot
+
+  - platform: uptime
+    name: Time Online
+
+  - platform: rest
+    name: hass_release_notes
+    resource: https://api.github.com/repos/home-assistant/core/releases/latest
+    value_template: '{{ value_json.name }}'
+    json_attributes: [body]
+    scan_interval: 21600
+
+  - platform: rest
+    name: hass_release_notes_rc
+    resource: https://api.github.com/repos/home-assistant/core/releases?per_page=1
+    value_template: '{{ value_json[0].name }}'
+    json_attributes: [body]
+    scan_interval: 21600
+
+  - platform: time_date
+    display_options:
+      ['time', 'date']
+
+    ####################################################
+    #                                                  #
+    #                     TEMPLATE                     #
+    #                                                  #
+    ####################################################
+  - platform: template
+    sensors:
+      placeholder:
+        value_template: ' '
+
+      sidebar_vacuum:
+        value_template: >
+          {% set entity_id = 'vacuum.xiaomi_vacuum' %}
+          {% if is_state(entity_id, 'cleaning') %} cleaning
+          {% elif is_state(entity_id, 'docked') %} docked
+          {% elif is_state(entity_id, 'returning') %} returning
+          {% endif %}
+
+      sidebar_weather:
+        value_template: >
+          {% set temperature = states('sensor.dark_sky_temperature') %}
+          {% set apparent = states('sensor.dark_sky_apparent_temperature') | round %}
+          {% set precip = states('sensor.dark_sky_precip_probability') | round %}
+          {% if not is_state('sensor.dark_sky_temperature', 'unknown') %}
+            {% if temperature | float <= 0.0 %}
+              seems like {{ apparent }}° and
+              {{ precip }}% risk of snow {{'\u2744\uFE0F'}}
+            {% elif temperature | float > 0.0 %}
+              seems like {{ apparent}}° and
+              {{ precip }}% risk for rain {{ '\u2614\uFE0F' if precip > 30 }}
+            {% endif %}
+          {% else %}
+            Unable to load weather information...
+          {% endif %}
+
+      sidebar_greeting:
+        entity_id: sensor.time
+        value_template: >
+          {% set time = now().strftime('%H') | int %}
+          {% if time <= 1 %} Good night {{'\U0001F611'}}
+          {% elif time <= 3 %} Good night {{'\U0001F62A'}}
+          {% elif time <= 5 %} Good night {{'\U0001F634'}}
+          {% elif time <= 7 %} Good morning {{'\U0001F4A9'}}
+          {% elif time <= 9 %} Good morning {{'\u2615\uFE0F'}}
+          {% elif time <= 10 %} Good morning {{'\U0001F642'}}
+          {% elif time <= 13 %} Good day {{'\U0001F60A'}}
+          {% elif time <= 15 %} Good day {{'\U0001F60E'}}
+          {% elif time <= 17 %} Good day {{'\U0001F44B\U0001F3FB'}}
+          {% elif time <= 19 %} Good evening {{'\U0001F44B\U0001F3FB'}}
+          {% elif time <= 22 %} Good evening {{'\U0001F60C'}}
+          {% elif time <= 23 %} Good evening {{'\U0001F974'}}
+          {% else %} Good evening {{'\U0001F974'}}
+          {% endif %}
+
+      sidebar_active:
+        value_template: >
+          {% set lights = [states.light.gateway_light_7811dcb7bd78, states.light.light.gateway_light_7811dcdeb385] %}
+          {% set lights_on = lights | selectattr('state','eq','on') | list %}
+          {% set lights_name = lights | selectattr('state','eq','on') | map(attribute='name') | join(', ') %}
+          {% set switches = [states.switch.original_xiaomi_mi_smart_wifi_socket, states.switch.original_xiaomi_mi_smart_wifi_socket2,
+          states.switch.original_xiaomi_mi_smart_wifi_socket3, states.switch.original_xiaomi_mi_smart_wifi_socket4] %}
+          {% set switches_on = switches | selectattr('state','eq','on') | list %}
+          {% set switches_name = switches | selectattr('state','eq','on') | map(attribute='name') | join(', ') %}
+          {% if (lights_on | length == 0) and (switches_on | length > 0) %}
+          {{ switches_name | regex_replace(',([^,]*)$',' and\\1') }} is on
+          {% elif (lights_on | length == 1) and (switches_on | length == 1) %}
+          {{ lights_name }} and {{switches_name }} is on
+          {% elif (lights_on | length == 1) and (switches_on | length > 1) %}
+          {{ lights_name }}, {{ switches_name | regex_replace(',([^,]*)$',' och\\1') }} is on
+          {% elif (lights_on | length > 1) and (switches_on | length == 1) %}
+          {{ lights_on | length }} light and {{ switches_name }} is on
+          {% elif (lights_on | length > 1) and (switches_on | length > 1) %}
+          {{ lights_on | length }} light, {{ switches_name | regex_replace(',([^,]*)$',' och\\1') }} is on
+          {% elif (lights_on | length == 1) and (switches_on | length == 0) %}
+          {{ lights_name }} is on
+          {% elif (lights_on | length > 1) and (switches_on | length == 0) %}
+          {{ lights_on | length}} lights are on
+          {% else %}
+          <font color='#6a7377'>Everything is off</font>
+          {% endif %}
+
+      sidebar_day:
+        icon_template: mdi:calendar
+        entity_id: sensor.date
+        value_template: >-
+          {{now().strftime("%A")}}
+      sidebar_date:
+        icon_template: mdi:calendar
+        entity_id: sensor.date
+        value_template: >-
+          {{now().strftime("%B %d")}}
+
+      hass_version:
+        icon_template: mdi:home-assistant
+        friendly_name_template: >
+          Installerad {{ states('sensor.hass_version_installed') }}
+        value_template: >
+          {{ 'Latest' if states('sensor.hass_version_installed') ==
+          states('sensor.hass_version_latest') else states('sensor.hass_version_latest') }}
+
+template:
+  select:
+    - name: conditional_media
+      state: >
+        {% set recently_added = 'Plex Movies' %}
+        {% set recently_added_backup = 'Plex Movies (Offline)' %}
+        {% set paused_timeout_minutes = 15 %}
+        {% set media_players = [
+          states.media_player.chrome,
+          states.media_player.plex_plex_web_chrome_osx,
+          states.media_player.emby_chrome_macos_2,
+          states.media_player.chromecast ] %}
+        
+        {% macro media(state) %}
+        {% set state = media_players | selectattr('state','eq',state) | list %}
+        {% set last_changed = recently_added if state | length == 0 else state | map(attribute='last_changed') | list | max %}
+          {{ state | selectattr('last_changed','eq', last_changed) | map(attribute='name') | list | join }}
+        {% endmacro %}
+
+        {% set recently_added = recently_added_backup if is_state('sensor.recently_added_offline','Active') else recently_added %}
+        
+        {% set playing = media_players | selectattr('state','eq','playing') | list %}
+        {% set timeout_playing = False if playing | length == 0 else
+          (as_timestamp(now()) - as_timestamp(playing | map(attribute='last_changed') | list | max)) < paused_timeout_minutes * 60 %}
+        
+        {% set paused = media_players | selectattr('state','eq','paused') | list %}
+        {% set timeout_paused = False if paused | length == 0 else
+          (as_timestamp(now()) - as_timestamp(paused | map(attribute='last_changed') | list | max)) < paused_timeout_minutes * 60 %}
+        
+        {% if playing %}
+          {{ media('playing') if timeout_playing else media('paused') if timeout_paused else media('playing') }}
+        {% elif paused %}
+          {{ media('paused') if timeout_paused else recently_added }}
+        {% else %}
+          {{ recently_added }}
+        {% endif %}
+      options: >
+        {% set recently_added = ['Plex Movies'] %}
+        {% set recently_added_backup = ['Plex Movies (Offline)'] %}
+        {% set media_players = [
+          states.media_player.chrome,
+          states.media_player.plex_plex_web_chrome_osx,
+          states.media_player.emby_chrome_macos_2,
+          states.media_player.chromecast ] %}
+        {{ recently_added + recently_added_backup + media_players | map(attribute='name') | list }}
+      select_option:
+        service: select.select_option
+        target:
+          entity_id: select.conditional_media
+        data:
+          option: >
+            {{ option }}
+
+
+  sensor:
+  
+    # SENSOR - PLEX RECENTLY ADDED (BACKUP)
+    - unique_id: recently_added_backup
+      name: 'Recently Added (Offline)'
+      state: >
+        {% if not is_state('sensor.plex_recently_added', 'Online') %}
+          Active
+        {% else %}
+          Passive
+        {# Waiting for 'Recently Added' to fail #}
+        {% endif %}
+      attributes:
+        data: >
+          {% if this.state not in ['unavailable','undefined','unknown','none','null','0'] %}
+            {% set data = states('input_text.backup_plex_recently_added') %}
+            {% set return = namespace(state=[]) %}
+            {% set items = data.split("|") %}
+            {% for item in items %}
+              {% set object = item.split(":") %}
+              {% set return.state = return.state + [{object[0]:object[1]}] %}
+            {% endfor %}
+            {{ return.state }}
+          {% endif %}
+        title: >
+          {% if this.state not in ['unavailable','undefined','unknown','none','null','0'] %}
+            {% set data = this.attributes.data %}
+            {% set year = data[0].aired.split('-')[0] %}
+            {% if data | count == 4 %}
+              {% set title = data[1].title + ' (' + year + ')' %}
+            {% else %}
+              {% set title = data[1].title + ' · ' + data[2].number %}
+            {% endif %}
+            {{ title }}
+          {% endif %}
+        poster: >
+          {% if this.state not in ['unavailable','undefined','unknown','none','null','0'] %}
+            {% set data = this.attributes.data %}
+            {% if data | count == 4 %}
+              {% set poster = data[3].poster %}
+            {% else %}
+              {% set poster = data[4].poster %}
+            {% endif %}
+            {{ poster }}
+          {% endif %}
+        fanart: >
+          {% if this.state not in ['unavailable','undefined','unknown','none','null','0'] %}
+            {% set data = this.attributes.data %}
+            {% if data | count == 4 %}
+              {% set fanart = data[2].fanart %}
+            {% else %}
+              {% set fanart = data[3].fanart %}
+            {% endif %}
+            {{ fanart }}
+          {% endif %}

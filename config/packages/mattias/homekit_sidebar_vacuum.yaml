@@ -1,0 +1,109 @@
+
+sensor:
+    ####################################################
+    #                                                  #
+    #                      VACUUM                      #
+    #                                                  #
+    ####################################################
+  - platform: template
+    sensors:
+      xiaomi_vacuum_battery:
+        friendly_name: Battery
+        unit_of_measurement: '%'
+        value_template: >
+          {{ state_attr('vacuum.xiaomi_vacuum', 'battery_level') }}
+        icon_template: >
+          {{ state_attr('vacuum.xiaomi_vacuum', 'battery_icon') }}
+      xiaomi_vacuum_state:
+        friendly_name: '小米掃地機器人'
+        icon_template: custom:roborock-vacuum
+        value_template: >
+          {% set entity_id = 'vacuum.xiaomi_vacuum' %}
+          {% if is_state(entity_id, 'docked') %} Dockad
+          {% elif is_state(entity_id, 'paused') %} Pausad
+          {% elif is_state(entity_id, 'cleaning') %} cleaning
+          {% elif is_state(entity_id, 'returning') %} returning
+          {% else %} {{ states(entity_id) }}
+          {% endif %}
+      xiaomi_vacuumk_speed:
+        value_template: >
+          {{ state_attr('vacuum.xiaomi_vacuum', 'fan_speed') }}
+      xiaomi_vacuum_filter:
+        friendly_name: Filter
+        icon_template: custom:roborock-filter
+        unit_of_measurement: '%'
+        value_template: >
+          {{ (state_attr('vacuum.xiaomi_vacuum', 'filter_left') / 1.5) | round | default(0) }}
+      xiaomi_vacuum_mainbrush:
+        friendly_name: Headbrush
+        icon_template: custom:roborock-mainbrush
+        unit_of_measurement: '%'
+        value_template: >
+          {{ (state_attr('vacuum.xiaomi_vacuum', 'main_brush_left') / 3) | round | default(0) }}
+      xiaomi_vacuum_sensors:
+        friendly_name: Sensors
+        icon_template: custom:roborock-sensor
+        unit_of_measurement: '%'
+        value_template: >
+          {{ (state_attr('vacuum.xiaomi_vacuum', 'sensor_dirty_left') / 0.3) | round | default(0) }}
+      xiaomi_vacuum_sidebrush:
+        friendly_name: Sidebrush
+        icon_template: custom:roborock-sidebrush
+        unit_of_measurement: '%'
+        value_template: >
+          {{ (state_attr('vacuum.xiaomi_vacuum', 'side_brush_left') / 2) | round | default(0) }}
+      xiaomi_vacuum_last_clean:
+        friendly_name: Last cleaned
+        icon_template: mdi:calendar-clock
+        value_template: >
+          {% set last_cleaned = (as_timestamp(now()) - as_timestamp(state_attr('vacuum.xiaomi_vacuum', 'clean_stop'))) | default(0) %}
+          {% if last_cleaned | timestamp_custom('%d') | int -1 == 1 %} {{ last_cleaned | timestamp_custom('%d') | int -1 }} dag ago
+          {% elif last_cleaned | timestamp_custom('%d') | int -1 >= 2 %} {{ last_cleaned | timestamp_custom('%d') | int -1 }} days ago
+          {% elif last_cleaned | timestamp_custom('%H') | int -1 == 1 %} {{ last_cleaned | timestamp_custom('%H') | int -1 }} hour ago
+          {% elif last_cleaned | timestamp_custom('%H') | int -1 >= 2 %} {{ last_cleaned | timestamp_custom('%H') | int -1 }} hours ago
+          {% elif last_cleaned | timestamp_custom('%M') | int == 1 %} {{ last_cleaned | timestamp_custom('%M') | int }} minute ago
+          {% elif last_cleaned | timestamp_custom('%M') | int >= 2 %} {{ last_cleaned | timestamp_custom('%M') | int }} minutes ago
+          {% else %} Less than 1 minute ago
+          {% endif %}
+
+input_select:
+
+  ####################################################
+  #                                                  #
+  #                      SELECT                      #
+  #                                                  #
+  ####################################################
+
+  xiaomi_vacuum_speed:
+    name: Cleaning mode
+    options:
+     ['Silent', 'Standard', 'Medium', 'Turbo', 'Gentle']
+    icon: mdi:format-list-bulleted
+
+
+
+automation:
+
+    ####################################################
+    #                                                  #
+    #                   AUTOMATIONS                    #
+    #                                                  #
+    ####################################################
+
+
+  - alias: vacuum_speed
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.xiaomi_vacuum_speed
+    action:
+      - service: vacuum.set_fan_speed
+        data:
+          entity_id: vacuum.xiaomi_vacuum
+          fan_speed: >
+            {% if is_state(trigger.entity_id, 'Tyst') %} Silent
+            {% elif is_state(trigger.entity_id, 'Standard') %} Standard
+            {% elif is_state(trigger.entity_id, 'Medium') %} Medium
+            {% elif is_state(trigger.entity_id, 'Turbo') %} Turbo
+            {% else %} Standard
+            {% endif %}

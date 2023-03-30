@@ -1,0 +1,66 @@
+#温度传感器 功耗
+temperature2:
+    template:
+      - base         #卡片
+    show_name: true # 名称开关
+    show_state: true # 隐藏卡片状态
+    state_display: >
+      [[[ return '&nbsp;'; ]]]
+    custom_fields:
+      circle: >
+        [[[ {
+        const temperature = Math.round(entity.state);
+        return `<svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20.5" stroke="#313638" stroke-width="1.5" fill="#FFFFFF08" style="
+        transform: rotate(-90deg); transform-origin: 50% 50%;" />
+        <text x="50%" y="54%" fill="#8d8e90" font-size="14" text-anchor="middle" alignment-baseline="middle" dominant-baseline="middle" dominant-baseline="middle">${temperature}w</text></svg>`; } ]]]
+      graph:
+        card:
+          type: "custom:mini-graph-card"
+          height: 130
+          hours_to_show: 12
+          points_per_hour: 1
+          #line_width: 8
+          font_size: 75
+          decimals: 0
+          refresh_interval: 120
+          show:
+            name: false
+            icon: false
+            state: false
+            legend: false
+            labels: false
+            labels_secondary: false
+            points: false
+            fill: fade
+          color_thresholds:
+            - color: '#039BE5'
+              value: 40
+            - color: '#0da035'
+              value: 65
+            - color: '#e45e65'
+              value: 85
+          card_mod:
+            style: |
+              :host{
+                    --ha-card-border-width: 0px;
+                   }
+    styles:
+          custom_fields:
+            graph: [bottom: 0%, left: 0%, width: 130%, position: absolute, margin: 0% 0% -13% -15.2%]
+            icon:
+              - width: 60%
+              - fill: "#9da0a2"
+            circle:
+              - display: initial
+              - width: 90%
+              - margin: -6% -5% 0 0
+              - justify-self: end
+              - opacity: 1
+          style: |
+            ha-card {
+                    box-shadow: none;
+                    }
+
+
+
+

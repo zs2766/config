@@ -1,0 +1,97 @@
+homeassistant:
+  packages: !include_dir_named packages
+  allowlist_external_dirs:
+    - '/config'
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+browser_mod:
+  prefix: "browser_mod_"
+
+lovelace:
+  mode: yaml
+  resources:
+    [ {url: /hacsfiles/bar-card/bar-card.js,                                  type: module},
+      {url: /hacsfiles/button-card/button-card.js,                            type: module},
+      {url: /hacsfiles/kiosk-mode/kiosk-mode.js,                              type: module},
+      {url: /hacsfiles/light-entity-card/light-entity-card.js,                type: module},
+      {url: /hacsfiles/light-popup-card/light-popup-card.js,                  type: module},
+      {url: /hacsfiles/lovelace-card-mod/card-mod.js,                         type: module},
+      {url: /hacsfiles/lovelace-hui-element/hui-element.js,                   type: module},
+      {url: /hacsfiles/lovelace-layout-card/layout-card.js,                   type: module},
+      {url: /hacsfiles/lovelace-slider-entity-row/slider-entity-row.js,       type: module},
+      {url: /hacsfiles/mini-graph-card/mini-graph-card-bundle.js,             type: module},
+      {url: /hacsfiles/mini-media-player/mini-media-player-bundle.js,         type: module},
+      {url: /hacsfiles/swipe-card/swipe-card.js,                              type: module},
+      {url: /hacsfiles/transmission-card/transmission-card.js,                type: module},
+      {url: /hacsfiles/meteo-france-weather-card/meteo-france-weather-card.js,type: module},
+      {url: /hacsfiles/lovelace-auto-entities/auto-entities.js,               type: module},
+      {url: /hacsfiles/upcoming-media-card/upcoming-media-card.js,               type: module},
+
+      {url: '/local/calendar-card.js?v=31091',                                type: module},
+      {url: '/local/stack-in-card.js?v=101',                                  type: module},
+      {url: '/local/valetudo-map-card.js?v=42dbceb',                          type: module},
+      {url: '/local/custom_icons.js?v=28082021',                              type: module},
+      {url: /local/font.css,                                                  type: css} ]
+
+homeassistant:
+  packages: !include_dir_named packages/
+
+# Example configuration.yaml entry
+media_player:
+  - platform: emby
+    host: 192.168.50.254
+    api_key: 155fa57907788a12add0164f8ad8b1b9
+    port: 8096
+
+http:
+ use_x_forwarded_for: true
+ trusted_proxies:
+   - 10.16.100.0/24
+   - 192.168.50.0/24
+
+sensor:
+- platform: plex_recently_added
+  token: Mqrb6Vasd5ttW-kgyAY_
+  host: 192.168.50.254
+  port: 32400
+
+
+  
+#sensor:
+#- platform: emby_upcoming_media
+  #api_key: 188fa8590685756231d0639f8ad8b1b9
+  #user_id: 5a49d58dce2289589126745816fa8e4d
+  #host: 192.168.50.254
+  #port: 8096
+  #ssl: false
+  #max: 5
+  #use_backdrop: true
+  #group_libraries: false
+
+device_tracker:
+  - platform: iphonedetect
+    consider_home: 60
+    scan_interval: 12
+    new_device_defaults:
+      track_new_devices: true
+    hosts:
+      hostname1: 192.168.50.39
+      hostname2: 192.168.50.23
+
+
+
+
+

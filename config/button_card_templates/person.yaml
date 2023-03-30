@@ -1,0 +1,27 @@
+person:
+  template:
+    - base
+    - circle
+  state_display: >
+      [[[
+         if (variables.state === 'home') {return '在家';}
+         if (variables.state === '公司') {return '在公司';}
+         return '外出中';
+      ]]]
+  triggers_update: sensor.time
+  tap_action:
+    action: none
+  styles:
+    custom_fields:
+      icon:
+        - clip-path: circle()
+        - width: 82%
+        - pointer-events: none
+        - display: grid
+  custom_fields:
+    icon: >
+      [[[
+        return entity && variables.entity_picture
+            ? `<img src="${variables.entity_picture}" width="100%">`
+            : null;
+      ]]]

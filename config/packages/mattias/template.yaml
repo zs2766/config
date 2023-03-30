@@ -1,0 +1,101 @@
+template:
+
+  ####################################################
+  #                                                  #
+  #                     TEMPLATE                     #
+  #                                                  #
+  ####################################################
+
+  sensor:
+    - unique_id: sidebar
+      state: template
+      attributes:
+        time: >
+          {% set hours = now().strftime('%H') %}
+          {% set minutes = now().strftime('%M') %}
+          <span class="time">
+            {{ hours }}<span class="time-colon">:</span>{{ minutes }}
+          </span>
+        date: |
+          <font color='#6a7377'><b>
+          {%- if strptime(states('sensor.date'), '%Y-%m-%d').day != null %}
+          {%- set days = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'] %}
+          {%- set months = ['一月', '二月', '三月', '四月', '五月', '六月', 
+          '七月', '八月', '九月', '十月', '十一月', '十二月'] %}
+            {{- days[now().weekday()] }}<br>
+            {{ months[now().month-1] }} {{- strptime(states('sensor.date'), '%Y-%m-%d').day }}日
+          {%- endif -%}
+          </b></font>
+        greet: |
+          <b>
+          {%- set time = now().hour %}
+          {%- if time <= 1 -%} 晚安 {{'\U0001F611'}}
+          {%- elif time <= 3 -%} 晚安 {{'\U0001F62A'}}
+          {%- elif time <= 5 -%} 晚安 {{'\U0001F634'}}
+          {%- elif time <= 7 -%} 早上好 {{'\U0001F4A9'}}
+          {%- elif time <= 9 -%} 早上好 {{'\u2615\uFE0F'}}
+          {%- elif time <= 10 -%} 上午好 {{'\U0001F642'}}
+          {%- elif time <= 13 -%} 中午好 {{'\U0001F60A'}}
+          {%- elif time <= 15 -%} 下午好 {{'\U0001F60E'}}
+          {%- elif time <= 17 -%} 下午好 {{'\U0001F44B\U0001F3FB'}}
+          {%- elif time <= 19 -%} 晚上好 {{'\U0001F44B\U0001F3FB'}}
+          {%- elif time <= 22 -%} 晚上好 {{'\U0001F60C'}}
+          {%- elif time <= 23 -%} 晚上好 {{'\U0001F974'}}
+          {%- else %} 晚上好 {{'\U0001F974'}}
+          {%- endif -%}
+          </b>
+
+
+    # SENSOR - PLEX RECENTLY ADDED (BACKUP)
+    - unique_id: recently_added_backup
+      name: 'Recently Added (Offline)'
+      state: >
+        {% if not is_state('sensor.plex_recently_added', 'Online') %}
+          Active
+        {% else %}
+          Passive
+        {# Waiting for 'Recently Added' to fail #}
+        {% endif %}
+      attributes:
+        data: >
+          {% if this.state not in ['unavailable','undefined','unknown','none','null','0'] %}
+            {% set data = states('input_text.backup_plex_recently_added') %}
+            {% set return = namespace(state=[]) %}
+            {% set items = data.split("|") %}
+            {% for item in items %}
+              {% set object = item.split(":") %}
+              {% set return.state = return.state + [{object[0]:object[1]}] %}
+            {% endfor %}
+            {{ return.state }}
+          {% endif %}
+        title: >
+          {% if this.state not in ['unavailable','undefined','unknown','none','null','0'] %}
+            {% set data = this.attributes.data %}
+            {% set year = data[0].aired.split('-')[0] %}
+            {% if data | count == 4 %}
+              {% set title = data[1].title + ' (' + year + ')' %}
+            {% else %}
+              {% set title = data[1].title + ' · ' + data[2].number %}
+            {% endif %}
+            {{ title }}
+          {% endif %}
+        poster: >
+          {% if this.state not in ['unavailable','undefined','unknown','none','null','0'] %}
+            {% set data = this.attributes.data %}
+            {% if data | count == 4 %}
+              {% set poster = data[3].poster %}
+            {% else %}
+              {% set poster = data[4].poster %}
+            {% endif %}
+            {{ poster }}
+          {% endif %}
+        fanart: >
+          {% if this.state not in ['unavailable','undefined','unknown','none','null','0'] %}
+            {% set data = this.attributes.data %}
+            {% if data | count == 4 %}
+              {% set fanart = data[2].fanart %}
+            {% else %}
+              {% set fanart = data[3].fanart %}
+            {% endif %}
+            {{ fanart }}
+          {% endif %}

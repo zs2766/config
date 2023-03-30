@@ -1,0 +1,76 @@
+#湿度传感器卡片
+humidity:
+    template:
+      - base          #like base but with transparent background
+    show_name: true # Hides Card Name
+    show_state: true # Hides Card state
+    state_display: >
+      [[[ return '&nbsp;'; ]]]
+    custom_fields:
+      circle: >
+        [[[ {
+        const humidity = Math.round(entity.state);
+        const input = `<tspan font-size="20">%</tspan>`;
+        return `<svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20.5" fill="none" style="
+        transform: rotate(-90deg); transform-origin: 50% 50%;" />
+        <text x="50%" y="54%" fill="#8d8e90" font-size="28" text-anchor="middle" alignment-baseline="middle" dominant-baseline="middle" dominant-baseline="middle">${humidity}${input}</text></svg>`; } ]]]
+      graph:
+        card:
+          type: "custom:mini-graph-card"
+          height: 140
+          hours_to_show: 24
+          points_per_hour: 2
+          #line_width: 8
+          font_size: 75
+          decimals: 0
+          refresh_interval: 120
+          show:
+            name: false
+            icon: false
+            state: false
+            legend: false
+            labels: false
+            labels_secondary: false
+            points: false
+            fill: fade
+          color_thresholds:
+            - value: 0
+              color: "#c0392b"
+            - value: 46
+              color: "#d35400"
+            - value: 55
+              color: "#228C22"
+            - value: 65
+              color: "#276696"
+          card_mod:
+            style: |
+              :host{
+                    --ha-card-border-width: 0px;
+                   }
+    styles:
+          custom_fields:
+            graph: [bottom: 0%, left: 0%, width: 130%, position: absolute, margin: 0% 0% -13% -15.2%]
+            icon:
+              - width: 67%
+              - fill: "#9da0a2"
+            circle:
+              - display: initial
+              - width: 90%
+              - margin: -6% -5% 0 0
+              - justify-self: end
+              - opacity: 1
+          style: |
+            ha-card {
+                    box-shadow: none;
+                    }
+
+icon_humidity:
+  styles:
+    custom_fields:
+      icon:
+        - width: 90%
+        - margin-left: -20%
+        - margin-top: -11%
+  custom_fields:
+    icon: >
+      <ha-icon icon="mdi:water-opacity"></ha-icon>
